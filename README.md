@@ -5,5 +5,7 @@
 ### TODO LIST
 + can press down multiple key
 + ~~fix the texture problem~~
-+ import enemy aircraft
++ ~~import enemy aircraft~~
 + create enemy bullet (sphere)
++ collision detection
++ background image
