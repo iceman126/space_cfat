@@ -26,13 +26,15 @@
             renderer.setSize( WINDOW_WIDTH, WINDOW_HEIGHT );
             document.body.appendChild( renderer.domElement );
 
-            var light = new THREE.AmbientLight( 0xA0A0A0 ); // soft white light
+            var light = new THREE.AmbientLight( 0xFFFFFF ); // soft white light
             scene.add( light );
 
             /* load aircrafts */
             var loader = new THREE.JSONLoader(); // init the loader util
 
             var our_craft, enemy_craft;
+            var bullet1, bullet2;
+            var cube;
 
             loader.load('model/FP/F-4E_Phantom_II.json',
                 function(geometries, materials) {
@@ -61,6 +63,19 @@
                 if (keyPressed[32] == true) console.log('fire!!');
                 */
                 
+                var geometry = new THREE.CylinderGeometry(0.02, 0.02, 0.3, 32);
+                var material = new THREE.MeshBasicMaterial( {color: 0xff0000} );
+                bullet1 = new THREE.Mesh( geometry, material );
+                bullet2 = new THREE.Mesh( geometry, material );
+
+
+                /*
+                var geometry = new THREE.BoxGeometry( 1, 1, 1 );
+                var material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
+                cube = new THREE.Mesh( geometry, material );
+                scene.add( cube );
+                */
+
                 document.addEventListener('keydown', function(e) {
                     var keycode = e.which;
                     // up
@@ -82,6 +97,12 @@
                     // spacebar - fire
                     if (keycode == 32) {
                         console.log('fire!!');
+                        bullet1.position.x = our_craft.position.x - 0.15;
+                        bullet1.position.y = our_craft.position.y + 0.3;
+                        bullet2.position.x = our_craft.position.x + 0.15;
+                        bullet2.position.y = our_craft.position.y + 0.3;
+                        scene.add(bullet1);
+                        scene.add(bullet2);
                     }
                     e.preventDefault();
                 });
@@ -94,6 +115,17 @@
             camera.position.z = 5;
 
             function render() {
+                /*
+                console.log("our_craft:");
+                console.log(our_craft.position.x);
+                console.log(our_craft.position.y);
+
+                console.log("bullet1:");
+                console.log(bullet1.position.x);
+                console.log(bullet1.position.y);
+                */
+                bullet1.position.y += MOVE_SPEED;
+                bullet2.position.y += MOVE_SPEED;
                 requestAnimationFrame( render );
                 renderer.render( scene, camera );
             }
