@@ -11,17 +11,15 @@
     <body>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r73/three.min.js"></script>
         <script>
-
             /* some constant */
             const MOVE_SPEED = 0.08;
             const WINDOW_WIDTH = 600;
             const WINDOW_HEIGHT = 900;
             var keyPressed = {};    
 
-            /* environment */
+            /* three.js environment */
             var scene = new THREE.Scene();
             var camera = new THREE.PerspectiveCamera( 75, WINDOW_WIDTH / WINDOW_HEIGHT, 0.1, 1000 );
-
             var renderer = new THREE.WebGLRenderer();
             renderer.setSize( WINDOW_WIDTH, WINDOW_HEIGHT );
             document.body.appendChild( renderer.domElement );
@@ -29,13 +27,19 @@
             var light = new THREE.AmbientLight( 0xFFFFFF ); // soft white light
             scene.add( light );
 
-            /* load aircrafts */
-            var loader = new THREE.JSONLoader(); // init the loader util
+            /* game objects */
+            function Shot(bullet1, bullet2) {
+                this.bullet1 = bullet1;
+                this.bullet2 = bullet2;
+            }
 
             var our_craft, enemy_craft;
-            var bullet1, bullet2;
-            var cube;
+            var bullet
+            var shots = [];                     // save all the bullets
+            init_bullet();
+            
 
+            var loader = new THREE.JSONLoader(); // init the loader util
             loader.load('model/FP/F-4E_Phantom_II.json',
                 function(geometries, materials) {
                     var material = new THREE.MeshFaceMaterial( materials );
@@ -63,19 +67,6 @@
                 if (keyPressed[32] == true) console.log('fire!!');
                 */
                 
-                var geometry = new THREE.CylinderGeometry(0.02, 0.02, 0.3, 32);
-                var material = new THREE.MeshBasicMaterial( {color: 0xff0000} );
-                bullet1 = new THREE.Mesh( geometry, material );
-                bullet2 = new THREE.Mesh( geometry, material );
-
-
-                /*
-                var geometry = new THREE.BoxGeometry( 1, 1, 1 );
-                var material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
-                cube = new THREE.Mesh( geometry, material );
-                scene.add( cube );
-                */
-
                 document.addEventListener('keydown', function(e) {
                     var keycode = e.which;
                     // up
@@ -97,12 +88,15 @@
                     // spacebar - fire
                     if (keycode == 32) {
                         console.log('fire!!');
+                        var bullet1 = bullet.clone(), bullet2 = bullet.clone();
                         bullet1.position.x = our_craft.position.x - 0.15;
                         bullet1.position.y = our_craft.position.y + 0.3;
                         bullet2.position.x = our_craft.position.x + 0.15;
                         bullet2.position.y = our_craft.position.y + 0.3;
-                        scene.add(bullet1);
-                        scene.add(bullet2);
+                        var shot = new Shot(bullet1, bullet2);
+                        shots.push(shot);
+                        console.log(shots);
+                        add_shot_to_scene(shots[shots.length - 1]);
                     }
                     e.preventDefault();
                 });
@@ -114,21 +108,44 @@
 
             camera.position.z = 5;
 
-            function render() {
-                /*
-                console.log("our_craft:");
-                console.log(our_craft.position.x);
-                console.log(our_craft.position.y);
+            /* bullet functions */
+            function init_bullet() {
+                var geometry = new THREE.CylinderGeometry(0.02, 0.02, 0.3, 32);
+                var material = new THREE.MeshBasicMaterial( {color: 0xff0000} );
+                bullet = new THREE.Mesh( geometry, material );
+            }
 
-                console.log("bullet1:");
-                console.log(bullet1.position.x);
-                console.log(bullet1.position.y);
-                */
-                bullet1.position.y += MOVE_SPEED;
-                bullet2.position.y += MOVE_SPEED;
+            function add_shot_to_scene(shot) {
+                scene.add(shot.bullet1);
+                scene.add(shot.bullet2);
+            }
+
+            function render() {
+                update_game();
                 requestAnimationFrame( render );
                 renderer.render( scene, camera );
             }
+
+            function update_game() {
+                /* update bullet */
+                var arr_len = shots.length;
+
+                // remove out of bound
+                for (var i = arr_len - 1; i >= 0; i--) {
+                    if (shots[i].bullet1.position.y > 20) {
+                        scene.remove(shots[i].bullet1);
+                        scene.remove(shots[i].bullet2);
+                        shots.splice(i, 1);
+                    }
+                }
+
+                arr_len = shots.length;
+                for (var i = 0; i < arr_len; i++) {
+                    shots[i].bullet1.position.y += MOVE_SPEED;
+                    shots[i].bullet2.position.y += MOVE_SPEED;
+                }
+            }
+
         </script>
     </body>
 </html>
