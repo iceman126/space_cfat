@@ -20,7 +20,7 @@
             const WINDOW_HEIGHT = 900;
             const X_LEFT_BORDER = -2;
             const X_RIGHT_BORDER = 2;
-            var keyPressed = {};    
+            var keyPressed = {};
 
             /* three.js environment */
             var scene = new THREE.Scene();
@@ -32,6 +32,10 @@
             var light = new THREE.AmbientLight( 0xFFFFFF ); // soft white light
             scene.add( light );
 
+
+            /* system variable */
+            var keyPressed = {};
+            
             /* game objects */
             function Shot(bullet1, bullet2) {
                 this.bullet1 = bullet1;
@@ -149,9 +153,34 @@
             }
 
             function render() {
+                collision_detection();
                 update_game();
                 requestAnimationFrame( render );
                 renderer.render( scene, camera );
+            }
+
+            function collision_detection() {
+                var rays = [
+                    new THREE.Vector3(1, -1, 0),
+                    new THREE.Vector3(1, 0, 0),
+                    new THREE.Vector3(1, 1, 0),
+                    new THREE.Vector3(0, 1, 0),
+                    new THREE.Vector3(0, -1, 0),
+                    new THREE.Vector3(-1, -1, 0),
+                    new THREE.Vector3(-1, 0, 0),
+                    new THREE.Vector3(-1, 1, 0),
+                ];
+
+                var caster = new THREE.Raycaster();
+
+                for (var i = 0; i < rays.length; i++) {
+                    caster.set(enemy_prototype.position, rays[i]);
+                    var collisions = caster.intersectObjects(scene.children);
+                    if (collisions.length > 0) {
+                        console.log('hit!!!');
+                        enemy_prototype.visible = false;
+                    }
+                }
             }
 
             function update_our_shots() {
