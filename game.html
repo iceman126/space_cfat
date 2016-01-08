@@ -9,7 +9,10 @@
         </style>
     </head>
     <body>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r73/three.min.js"></script>
+        <script src="threejs/three.js"></script>
+        <script src="threejs/DDSLoader.js"></script>
+        <script src="threejs/MTLLoader.js"></script>
+        <script src="threejs/OBJMTLLoader.js"></script>
         <script>
             /* some constant */
             const MOVE_SPEED = 0.08;
@@ -39,7 +42,8 @@
             var shots = [];                     // save all the bullets
             var enemy_crafts = [];
             init_bullet();
-            var loader = new THREE.JSONLoader(); // init the loader util
+            // var loader = new THREE.JSONLoader(); // init the loader util
+            var loader = new THREE.OBJMTLLoader();
             load_crafts();                      // <- main() is called in this function
 
             
@@ -112,10 +116,9 @@
             }
 
             function load_our_craft() {
-                loader.load('model/FP/F-4E_Phantom_II.json',
-                    function(geometries, materials) {
-                        var material = new THREE.MeshFaceMaterial( materials );
-                        our_craft = new THREE.Mesh( geometries, material );
+                loader.load('model/FP/F-4E_Phantom_II.obj', 'model/FP/F-4E_Phantom_II.mtl',
+                    function (object) {
+                        our_craft = object;
                         our_craft.scale.set(0.06, 0.06, 0.06);
                         our_craft.position.y = -1.5;
                         scene.add(our_craft);
@@ -124,15 +127,13 @@
             }
 
             function load_enemy_prototype() {
-                loader.load('model/tyderium/tyderium.json',
-                function(geometries, materials) {
-                    var material = new THREE.MeshFaceMaterial( materials );
-                    enemy_prototype = new THREE.Mesh( geometries, material );
-                    enemy_prototype.scale.set(0.0006, 0.0006, 0.0006);
-                    enemy_prototype.position.y = 1.5;
-                    enemy_prototype.rotation.x = 2;
-                    scene.add(enemy_prototype);
-                    main();
+                loader.load('model/star-wars-vader-tie-fighter-obj/star-wars-vader-tie-fighter.obj', 'model/star-wars-vader-tie-fighter-obj/star-wars-vader-tie-fighter.mtl',
+                    function (object) {
+                        enemy_prototype = object;
+                        enemy_prototype.scale.set(0.015, 0.015, 0.015);
+                        enemy_prototype.rotation.x = Math.PI / 2;
+                        scene.add(enemy_prototype);
+                        main();
                 });
             }
 
