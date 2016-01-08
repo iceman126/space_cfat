@@ -33,23 +33,15 @@
                 this.bullet2 = bullet2;
             }
 
-            var our_craft, enemy_craft;
+            var our_craft;
             var bullet
+            var enemy_prototype;
             var shots = [];                     // save all the bullets
+            var enemy_crafts = [];
             init_bullet();
-            
-
             var loader = new THREE.JSONLoader(); // init the loader util
-            loader.load('model/FP/F-4E_Phantom_II.json',
-                function(geometries, materials) {
-                    var material = new THREE.MeshFaceMaterial( materials );
-                    our_craft = new THREE.Mesh( geometries, material );
-                    our_craft.scale.set(0.06, 0.06, 0.06);
-                    our_craft.position.y = -1.5;
-                    scene.add(our_craft);
-                    main();
-                }
-            );
+            load_crafts();                      // <- main() is called in this function
+
             
             function main() {
                 /* add event listener */
@@ -115,6 +107,35 @@
                 bullet = new THREE.Mesh( geometry, material );
             }
 
+            function load_crafts() {
+                load_our_craft();
+            }
+
+            function load_our_craft() {
+                loader.load('model/FP/F-4E_Phantom_II.json',
+                    function(geometries, materials) {
+                        var material = new THREE.MeshFaceMaterial( materials );
+                        our_craft = new THREE.Mesh( geometries, material );
+                        our_craft.scale.set(0.06, 0.06, 0.06);
+                        our_craft.position.y = -1.5;
+                        scene.add(our_craft);
+                        load_enemy_prototype();
+                });
+            }
+
+            function load_enemy_prototype() {
+                loader.load('model/tyderium/tyderium.json',
+                function(geometries, materials) {
+                    var material = new THREE.MeshFaceMaterial( materials );
+                    enemy_prototype = new THREE.Mesh( geometries, material );
+                    enemy_prototype.scale.set(0.0006, 0.0006, 0.0006);
+                    enemy_prototype.position.y = 1.5;
+                    enemy_prototype.rotation.x = 2;
+                    scene.add(enemy_prototype);
+                    main();
+                });
+            }
+
             function add_shot_to_scene(shot) {
                 scene.add(shot.bullet1);
                 scene.add(shot.bullet2);
@@ -132,7 +153,7 @@
 
                 // remove out of bound
                 for (var i = arr_len - 1; i >= 0; i--) {
-                    if (shots[i].bullet1.position.y > 20) {
+                    if (shots[i].bullet1.position.y > 6) {
                         scene.remove(shots[i].bullet1);
                         scene.remove(shots[i].bullet2);
                         shots.splice(i, 1);
