@@ -18,6 +18,8 @@
             const MOVE_SPEED = 0.08;
             const WINDOW_WIDTH = 600;
             const WINDOW_HEIGHT = 900;
+            const X_LEFT_BORDER = -2;
+            const X_RIGHT_BORDER = 2;
             var keyPressed = {};    
 
             /* three.js environment */
@@ -42,7 +44,6 @@
             var shots = [];                     // save all the bullets
             var enemy_crafts = [];
             init_bullet();
-            // var loader = new THREE.JSONLoader(); // init the loader util
             var loader = new THREE.OBJMTLLoader();
             load_crafts();                      // <- main() is called in this function
 
@@ -65,22 +66,27 @@
                 
                 document.addEventListener('keydown', function(e) {
                     var keycode = e.which;
-                    // up
-                    if (keycode == 38) {
-                        our_craft.position.y += MOVE_SPEED;
-                    }
-                    // down
-                    if (keycode == 40) {
-                        our_craft.position.y -= MOVE_SPEED;
-                    }
-                    // left
-                    if (keycode == 37) {
-                        our_craft.position.x -= MOVE_SPEED;
-                    }
-                    // right
-                    if (keycode == 39) {
-                        our_craft.position.x += MOVE_SPEED;
-                    }
+                        // up
+                        if (keycode == 38) {
+                            our_craft.position.y += MOVE_SPEED;
+                        }
+                        // down
+                        if (keycode == 40) {
+                            our_craft.position.y -= MOVE_SPEED;
+                        }
+                        if (our_craft.position.x >= -2) {
+                            // left
+                            if (keycode == 37) {
+                                our_craft.position.x -= MOVE_SPEED;
+                            }
+                        }
+                        if (our_craft.position.x <= 2) {
+                            // right
+                            if (keycode == 39) {
+                                our_craft.position.x += MOVE_SPEED;
+                            }
+                        }
+
                     // spacebar - fire
                     if (keycode == 32) {
                         console.log('fire!!');
@@ -148,7 +154,7 @@
                 renderer.render( scene, camera );
             }
 
-            function update_game() {
+            function update_our_shots() {
                 /* update bullet */
                 var arr_len = shots.length;
 
@@ -166,6 +172,10 @@
                     shots[i].bullet1.position.y += MOVE_SPEED;
                     shots[i].bullet2.position.y += MOVE_SPEED;
                 }
+            }
+
+            function update_game() {
+                update_our_shots();
             }
 
         </script>
