@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>My first Three.js app</title>
+        <style>
+            body { margin: 0; }
+            canvas { width: 100%; height: 100% }
+        </style>
+    </head>
+    <body>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r73/three.min.js"></script>
+        <script>
+
+            /* some constant */
+            const MOVE_SPEED = 0.08;
+            const WINDOW_WIDTH = 600;
+            const WINDOW_HEIGHT = 900;
+            var keyPressed = {};    
+
+            /* environment */
+            var scene = new THREE.Scene();
+            var camera = new THREE.PerspectiveCamera( 75, WINDOW_WIDTH / WINDOW_HEIGHT, 0.1, 1000 );
+
+            var renderer = new THREE.WebGLRenderer();
+            renderer.setSize( WINDOW_WIDTH, WINDOW_HEIGHT );
+            document.body.appendChild( renderer.domElement );
+
+            var light = new THREE.AmbientLight( 0xA0A0A0 ); // soft white light
+            scene.add( light );
+
+            /* load aircrafts */
+            var loader = new THREE.JSONLoader(); // init the loader util
+
+            var our_craft, enemy_craft;
+
+            loader.load('model/FP/F-4E_Phantom_II.json',
+                function(geometries, materials) {
+                    var material = new THREE.MeshFaceMaterial( materials );
+                    our_craft = new THREE.Mesh( geometries, material );
+                    our_craft.scale.set(0.06, 0.06, 0.06);
+                    our_craft.position.y = -1.5;
+                    scene.add(our_craft);
+                    main();
+                }
+            );
+            
+            function main() {
+                /* add event listener */
+                /*
+                document.addEventListener('keydown', function(e) { keyPressed[e.which] = true; e.preventDefault(); console.log(e.which)}, false);
+                document.addEventListener('keyup', function(e) { keyPressed[e.which] = false; e.preventDefault(); }, false);
+
+                if (keyPressed[38] == true) {
+                    console.log('up');
+                    our_craft.position.y += MOVE_SPEED;
+                }
+                if (keyPressed[40] == true) our_craft.position.y -= MOVE_SPEED;
+                if (keyPressed[37] == true) our_craft.position.x -= MOVE_SPEED;
+                if (keyPressed[39] == true) our_craft.position.x += MOVE_SPEED;
+                if (keyPressed[32] == true) console.log('fire!!');
+                */
+                
+                document.addEventListener('keydown', function(e) {
+                    var keycode = e.which;
+                    // up
+                    if (keycode == 38) {
+                        our_craft.position.y += MOVE_SPEED;
+                    }
+                    // down
+                    if (keycode == 40) {
+                        our_craft.position.y -= MOVE_SPEED;
+                    }
+                    // left
+                    if (keycode == 37) {
+                        our_craft.position.x -= MOVE_SPEED;
+                    }
+                    // right
+                    if (keycode == 39) {
+                        our_craft.position.x += MOVE_SPEED;
+                    }
+                    // spacebar - fire
+                    if (keycode == 32) {
+                        console.log('fire!!');
+                    }
+                    e.preventDefault();
+                });
+
+                render();
+            }
+
+            /* render */
+
+            camera.position.z = 5;
+
+            function render() {
+                requestAnimationFrame( render );
+                renderer.render( scene, camera );
+            }
+        </script>
+    </body>
+</html>
