@@ -8,4 +8,4 @@
 + ~~import enemy aircraft~~
 + create enemy bullet (sphere)
 + collision detection
-+ background image
++ ~~background image~~
