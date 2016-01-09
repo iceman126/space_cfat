@@ -192,6 +192,7 @@
                                 enemies[i].visible = false;
                                 scene.remove(enemies[i]);
                                 enemies.splice(i, 1);
+                                break;
                             }
                         //}
                     }
@@ -222,11 +223,26 @@
                 update_player_craft();
                 update_our_shots();
                 update_enemies();
+                if (enemies.length == 0) {
+                    set_wave(2);
+                }
             }
 
             // set wave enemy
             function set_wave(index) {
                 if (index == 1) {
+                    var enemy_count = 10;
+                    for (var i = 0; i < 10; i++) {
+                        var temp_enemy = enemy_prototype.clone();
+                        var temp_dir = [0, -0.25, 0];
+                        temp_enemy.position.x = -15 + 5 * (i % 5);
+                        temp_enemy.position.y = Y_TOP_BORDER + 4 - 5 * Math.floor(i / 5);
+                        enemies.push(temp_enemy);
+                        enemies_move.push(temp_dir);
+                        scene.add(enemies[enemies.length - 1]);
+                    }
+                }
+                if (index == 2) {
                     var enemy_count = 10;
                     for (var i = 0; i < 10; i++) {
                         var temp_enemy = enemy_prototype.clone();
