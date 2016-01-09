@@ -15,11 +15,12 @@
         <script src="threejs/OBJMTLLoader.js"></script>
         <script>
             /* some constant */
-            const MOVE_SPEED = 0.08;
+            const MOVE_SPEED = 0.8;
             const WINDOW_WIDTH = 600;
             const WINDOW_HEIGHT = 900;
-            const X_LEFT_BORDER = -2;
-            const X_RIGHT_BORDER = 2;
+            const X_LEFT_BORDER = -20;
+            const X_RIGHT_BORDER = 20;
+            const Y_TOP_BORDER = 20;
             var keyPressed = {};
 
             /* three.js environment */
@@ -42,17 +43,68 @@
                 this.bullet2 = bullet2;
             }
 
-            var our_craft;
-            var bullet
-            var enemy_prototype;
-            var shots = [];                     // save all the bullets
-            var enemy_crafts = [];
-            init_bullet();
-            var loader = new THREE.OBJMTLLoader();
-            load_crafts();                      // <- main() is called in this function
+            /* player's */
+            var player_craft;
+            var player_shots = [];
+            var player_bullet;
 
+            /* enemies' */
+            var enemy_prototype;
+            var enemies = [];
+            var enemy_shots = [];
+
+            /* system's */
+            var temp1 = {}, temp2 = {};
+
+            start();
+
+            function start() {
+                /* load models */
+                var manager = create_loader_manager();
+                load_model(temp1, manager, 'model/star-wars-arc-170-pbr-obj/star-wars-arc-170-pbr.obj', 'model/star-wars-arc-170-pbr-obj/star-wars-arc-170-pbr.mtl', 0.3, -Math.PI / 2);
+                load_model(temp2, manager, 'model/star-wars-vader-tie-fighter-obj/star-wars-vader-tie-fighter.obj', 'model/star-wars-vader-tie-fighter-obj/star-wars-vader-tie-fighter.mtl', 0.15, Math.PI / 2);
+
+                /* initial bullets */
+                init_player_bullet();
+            }
+
+            function load_model(target, manager, model_path, mat_path, scale, rotation) {
+                var loader = new THREE.OBJMTLLoader(manager);
+                loader.load(model_path, mat_path,
+                    function (object) {
+                        target.craft = object;
+                        target.craft.scale.set(scale, scale, scale);
+                        target.craft.rotation.x = rotation;
+                });
+            }
+
+            function set_position(target, x, y) {
+                target.position.x = x;
+                target.position.y = y;
+            }
+
+            function create_loader_manager() {
+                var manager = new THREE.LoadingManager();
+                manager.onProgress = function ( item, loaded, total ) {
+                    console.log( item, loaded, total );
+                };
+                manager.onLoad = function() {
+                    player_craft = temp1.craft;
+                    enemy_prototype = temp2.craft;
+                    set_position(player_craft, 0, -15);
+                    set_position(enemy_prototype, 0, 0);
+                    scene.add(player_craft);
+                    scene.add(enemy_prototype);
+                    main();
+                };
+                return manager
+            }
             
             function main() {
+                console.log('in main');
+                console.log(player_craft.position);
+                console.log(player_craft);
+                console.log(enemy_prototype);
                 /* add event listener */
                 /*
                 document.addEventListener('keydown', function(e) { keyPressed[e.which] = true; e.preventDefault(); console.log(e.which)}, false);
@@ -68,41 +120,45 @@
                 if (keyPressed[32] == true) console.log('fire!!');
                 */
                 
+                //player.add_to_scene();
+                //enemy_prototype.add_to_scene();
+
                 document.addEventListener('keydown', function(e) {
+                    //console.log(player.craft);
                     var keycode = e.which;
                         // up
                         if (keycode == 38) {
-                            our_craft.position.y += MOVE_SPEED;
+                            player_craft.position.y += MOVE_SPEED;
                         }
                         // down
                         if (keycode == 40) {
-                            our_craft.position.y -= MOVE_SPEED;
+                            player_craft.position.y -= MOVE_SPEED;
                         }
-                        if (our_craft.position.x >= -2) {
+                        if (player_craft.position.x >= X_LEFT_BORDER) {
                             // left
                             if (keycode == 37) {
-                                our_craft.position.x -= MOVE_SPEED;
+                                player_craft.position.x -= MOVE_SPEED;
                             }
                         }
-                        if (our_craft.position.x <= 2) {
+                        if (player_craft.position.x <= X_RIGHT_BORDER) {
                             // right
                             if (keycode == 39) {
-                                our_craft.position.x += MOVE_SPEED;
+                                player_craft.position.x += MOVE_SPEED;
                             }
                         }
 
                     // spacebar - fire
                     if (keycode == 32) {
                         console.log('fire!!');
-                        var bullet1 = bullet.clone(), bullet2 = bullet.clone();
-                        bullet1.position.x = our_craft.position.x - 0.15;
-                        bullet1.position.y = our_craft.position.y + 0.3;
-                        bullet2.position.x = our_craft.position.x + 0.15;
-                        bullet2.position.y = our_craft.position.y + 0.3;
+                        var bullet1 = player_bullet.clone(), bullet2 = player_bullet.clone();
+                        bullet1.position.x = player_craft.position.x - 1.5;
+                        bullet1.position.y = player_craft.position.y + 3;
+                        bullet2.position.x = player_craft.position.x + 1.5;
+                        bullet2.position.y = player_craft.position.y + 3;
                         var shot = new Shot(bullet1, bullet2);
-                        shots.push(shot);
-                        console.log(shots);
-                        add_shot_to_scene(shots[shots.length - 1]);
+                        player_shots.push(shot);
+                        console.log(player_shots);
+                        add_shot_to_scene(player_shots[player_shots.length - 1]);
                     }
                     e.preventDefault();
                 });
@@ -112,13 +168,13 @@
 
             /* render */
 
-            camera.position.z = 5;
+            camera.position.z = 50;
 
             /* bullet functions */
-            function init_bullet() {
-                var geometry = new THREE.CylinderGeometry(0.02, 0.02, 0.3, 32);
+            function init_player_bullet() {
+                var geometry = new THREE.CylinderGeometry(0.2, 0.2, 3, 32);
                 var material = new THREE.MeshBasicMaterial( {color: 0xff0000} );
-                bullet = new THREE.Mesh( geometry, material );
+                player_bullet = new THREE.Mesh( geometry, material );
             }
 
             function load_crafts() {
@@ -126,24 +182,25 @@
             }
 
             function load_our_craft() {
-                loader.load('model/FP/F-4E_Phantom_II.obj', 'model/FP/F-4E_Phantom_II.mtl',
+                var loader = new THREE.OBJMTLLoader(manager);
+                loader.load('model/star-wars-arc-170-pbr-obj/star-wars-arc-170-pbr.obj', 'model/star-wars-arc-170-pbr-obj/star-wars-arc-170-pbr.mtl',
                     function (object) {
                         our_craft = object;
-                        our_craft.scale.set(0.06, 0.06, 0.06);
+                        our_craft.scale.set(0.03, 0.03, 0.03);
                         our_craft.position.y = -1.5;
+                        our_craft.rotation.x = -Math.PI / 2;
                         scene.add(our_craft);
-                        load_enemy_prototype();
                 });
             }
 
             function load_enemy_prototype() {
+                var loader = new THREE.OBJMTLLoader(manager);
                 loader.load('model/star-wars-vader-tie-fighter-obj/star-wars-vader-tie-fighter.obj', 'model/star-wars-vader-tie-fighter-obj/star-wars-vader-tie-fighter.mtl',
                     function (object) {
                         enemy_prototype = object;
                         enemy_prototype.scale.set(0.015, 0.015, 0.015);
                         enemy_prototype.rotation.x = Math.PI / 2;
                         scene.add(enemy_prototype);
-                        main();
                 });
             }
 
@@ -161,6 +218,7 @@
 
             function collision_detection() {
                 var rays = [
+                    /*
                     new THREE.Vector3(1, -1, 0),
                     new THREE.Vector3(1, 0, 0),
                     new THREE.Vector3(1, 1, 0),
@@ -169,37 +227,44 @@
                     new THREE.Vector3(-1, -1, 0),
                     new THREE.Vector3(-1, 0, 0),
                     new THREE.Vector3(-1, 1, 0),
+                    */
+                    new THREE.Vector3(1, -1, 0),
+                    new THREE.Vector3(0, -1, 0),
+                    new THREE.Vector3(-1, -1, 0),
                 ];
 
                 var caster = new THREE.Raycaster();
+
+                // console.log(enemy_prototype.position);
 
                 for (var i = 0; i < rays.length; i++) {
                     caster.set(enemy_prototype.position, rays[i]);
                     var collisions = caster.intersectObjects(scene.children);
                     if (collisions.length > 0) {
-                        console.log('hit!!!');
-                        enemy_prototype.visible = false;
+                        console.log(collisions);
+                        // enemy_prototype.visible = false;
+                        scene.remove(enemy_prototype);
                     }
                 }
             }
 
             function update_our_shots() {
                 /* update bullet */
-                var arr_len = shots.length;
+                var arr_len = player_shots.length;
 
                 // remove out of bound
                 for (var i = arr_len - 1; i >= 0; i--) {
-                    if (shots[i].bullet1.position.y > 6) {
-                        scene.remove(shots[i].bullet1);
-                        scene.remove(shots[i].bullet2);
-                        shots.splice(i, 1);
+                    if (player_shots[i].bullet1.position.y > Y_TOP_BORDER) {
+                        scene.remove(player_shots[i].bullet1);
+                        scene.remove(player_shots[i].bullet2);
+                        player_shots.splice(i, 1);
                     }
                 }
 
-                arr_len = shots.length;
+                arr_len = player_shots.length;
                 for (var i = 0; i < arr_len; i++) {
-                    shots[i].bullet1.position.y += MOVE_SPEED;
-                    shots[i].bullet2.position.y += MOVE_SPEED;
+                    player_shots[i].bullet1.position.y += MOVE_SPEED;
+                    player_shots[i].bullet2.position.y += MOVE_SPEED;
                 }
             }
 
