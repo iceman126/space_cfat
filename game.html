@@ -20,7 +20,7 @@
             const WINDOW_HEIGHT = 900;
             const X_LEFT_BORDER = -20;
             const X_RIGHT_BORDER = 20;
-            const Y_TOP_BORDER = 20;
+            const Y_TOP_BORDER = 25;
             var keyPressed = {};
 
             /* three.js environment */
@@ -101,68 +101,8 @@
             }
             
             function main() {
-                console.log('in main');
-                console.log(player_craft.position);
-                console.log(player_craft);
-                console.log(enemy_prototype);
-                /* add event listener */
-                /*
-                document.addEventListener('keydown', function(e) { keyPressed[e.which] = true; e.preventDefault(); console.log(e.which)}, false);
-                document.addEventListener('keyup', function(e) { keyPressed[e.which] = false; e.preventDefault(); }, false);
-
-                if (keyPressed[38] == true) {
-                    console.log('up');
-                    our_craft.position.y += MOVE_SPEED;
-                }
-                if (keyPressed[40] == true) our_craft.position.y -= MOVE_SPEED;
-                if (keyPressed[37] == true) our_craft.position.x -= MOVE_SPEED;
-                if (keyPressed[39] == true) our_craft.position.x += MOVE_SPEED;
-                if (keyPressed[32] == true) console.log('fire!!');
-                */
-                
-                //player.add_to_scene();
-                //enemy_prototype.add_to_scene();
-
-                document.addEventListener('keydown', function(e) {
-                    //console.log(player.craft);
-                    var keycode = e.which;
-                        // up
-                        if (keycode == 38) {
-                            player_craft.position.y += MOVE_SPEED;
-                        }
-                        // down
-                        if (keycode == 40) {
-                            player_craft.position.y -= MOVE_SPEED;
-                        }
-                        if (player_craft.position.x >= X_LEFT_BORDER) {
-                            // left
-                            if (keycode == 37) {
-                                player_craft.position.x -= MOVE_SPEED;
-                            }
-                        }
-                        if (player_craft.position.x <= X_RIGHT_BORDER) {
-                            // right
-                            if (keycode == 39) {
-                                player_craft.position.x += MOVE_SPEED;
-                            }
-                        }
-
-                    // spacebar - fire
-                    if (keycode == 32) {
-                        console.log('fire!!');
-                        var bullet1 = player_bullet.clone(), bullet2 = player_bullet.clone();
-                        bullet1.position.x = player_craft.position.x - 1.5;
-                        bullet1.position.y = player_craft.position.y + 3;
-                        bullet2.position.x = player_craft.position.x + 1.5;
-                        bullet2.position.y = player_craft.position.y + 3;
-                        var shot = new Shot(bullet1, bullet2);
-                        player_shots.push(shot);
-                        console.log(player_shots);
-                        add_shot_to_scene(player_shots[player_shots.length - 1]);
-                    }
-                    e.preventDefault();
-                });
-
+                document.addEventListener('keydown', keydown_handler);
+                document.addEventListener('keyup', keyup_handler);
                 render();
             }
 
@@ -179,6 +119,17 @@
 
             function load_crafts() {
                 load_our_craft();
+            }
+
+            function keyup_handler(e) {
+                var keycode = e.which;
+                keyPressed[keycode] = false;
+            }
+
+            function keydown_handler(e) {
+                var keycode = e.which;
+                keyPressed[keycode] = true;
+                e.preventDefault();
             }
 
             function load_our_craft() {
@@ -269,9 +220,40 @@
             }
 
             function update_game() {
+                update_player_craft();
                 update_our_shots();
             }
 
+            function update_player_craft() {
+                // up
+                if (keyPressed[38] == true) {
+                    player_craft.position.y += MOVE_SPEED;
+                }
+                // down
+                if (keyPressed[40] == true) {
+                    player_craft.position.y -= MOVE_SPEED;
+                }
+                if (keyPressed[37] == true && player_craft.position.x >= X_LEFT_BORDER) {
+                    player_craft.position.x -= MOVE_SPEED;
+                }
+                if (keyPressed[39] == true && player_craft.position.x <= X_RIGHT_BORDER) {
+                    player_craft.position.x += MOVE_SPEED;
+                }
+
+                // spacebar - fire
+                if (keyPressed[32] == true) {
+                    console.log('fire!!');
+                    var bullet1 = player_bullet.clone(), bullet2 = player_bullet.clone();
+                    bullet1.position.x = player_craft.position.x - 1.5;
+                    bullet1.position.y = player_craft.position.y + 3;
+                    bullet2.position.x = player_craft.position.x + 1.5;
+                    bullet2.position.y = player_craft.position.y + 3;
+                    var shot = new Shot(bullet1, bullet2);
+                    player_shots.push(shot);
+                    console.log(player_shots);
+                    add_shot_to_scene(player_shots[player_shots.length - 1]);
+                }
+            }
         </script>
     </body>
 </html>
