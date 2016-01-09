@@ -26,7 +26,8 @@
             const WINDOW_HEIGHT = 900;
             const X_LEFT_BORDER = -20;
             const X_RIGHT_BORDER = 20;
-            const Y_TOP_BORDER = 30;
+            const Y_TOP_BORDER = 35;
+            const Y_BOTTOM_BORDER = -35;
             var keyPressed = {};
 
             /* three.js environment */
@@ -58,6 +59,7 @@
             var enemy_prototype;
             var enemies = [];
             var enemy_shots = [];
+            var enemies_move = [];
 
             /* system's */
             var temp1 = {}, temp2 = {};
@@ -98,9 +100,7 @@
                     player_craft = temp1.craft;
                     enemy_prototype = temp2.craft;
                     set_position(player_craft, 0, -15);
-                    set_position(enemy_prototype, 0, 0);
                     scene.add(player_craft);
-                    scene.add(enemy_prototype);
                     main();
                 };
                 return manager
@@ -109,6 +109,7 @@
             function main() {
                 document.addEventListener('keydown', keydown_handler);
                 document.addEventListener('keyup', keyup_handler);
+                set_wave(1);
                 render();
             }
 
@@ -137,30 +138,7 @@
                 keyPressed[keycode] = true;
                 e.preventDefault();
             }
-
-            function load_our_craft() {
-                var loader = new THREE.OBJMTLLoader(manager);
-                loader.load('model/star-wars-arc-170-pbr-obj/star-wars-arc-170-pbr.obj', 'model/star-wars-arc-170-pbr-obj/star-wars-arc-170-pbr.mtl',
-                    function (object) {
-                        our_craft = object;
-                        our_craft.scale.set(0.03, 0.03, 0.03);
-                        our_craft.position.y = -1.5;
-                        our_craft.rotation.x = -Math.PI / 2;
-                        scene.add(our_craft);
-                });
-            }
-
-            function load_enemy_prototype() {
-                var loader = new THREE.OBJMTLLoader(manager);
-                loader.load('model/star-wars-vader-tie-fighter-obj/star-wars-vader-tie-fighter.obj', 'model/star-wars-vader-tie-fighter-obj/star-wars-vader-tie-fighter.mtl',
-                    function (object) {
-                        enemy_prototype = object;
-                        enemy_prototype.scale.set(0.015, 0.015, 0.015);
-                        enemy_prototype.rotation.x = Math.PI / 2;
-                        scene.add(enemy_prototype);
-                });
-            }
-
+          
             function add_shot_to_scene(shot) {
                 scene.add(shot.bullet1);
                 scene.add(shot.bullet2);
@@ -194,13 +172,22 @@
 
                 // console.log(enemy_prototype.position);
 
-                for (var i = 0; i < rays.length; i++) {
-                    caster.set(enemy_prototype.position, rays[i]);
-                    var collisions = caster.intersectObjects(scene.children);
-                    if (collisions.length > 0) {
-                        console.log(collisions);
-                        // enemy_prototype.visible = false;
-                        scene.remove(enemy_prototype);
+                var enemy_count = enemies.length;
+                var player_shots_count = player_shots.length;
+                for (var i = enemy_count - 1; i >= 0; i--) {
+                    for (var j = 0; j < rays.length; j++) {
+                        caster.set(enemies[i].position, rays[j]);
+                        //for (var k = 0; k < player_shots_count; k++) {
+                            var collisions = caster.intersectObjects(scene.children);
+                            //var collisions = caster.intersectObjects(player_shots[k].bullet1);
+                            //collisions += caster.intersectObjects(player_shots[k].bullet2);
+                            if (collisions.length > 0) {
+                                console.log(collisions);
+                                enemies[i].visible = false;
+                                scene.remove(enemies[i]);
+                                enemies.splice(i, 1);
+                            }
+                        //}
                     }
                 }
             }
@@ -228,6 +215,39 @@
             function update_game() {
                 update_player_craft();
                 update_our_shots();
+                update_enemies();
+            }
+
+            // set wave enemy
+            function set_wave(index) {
+                if (index == 1) {
+                    var enemy_count = 10;
+                    for (var i = 0; i < 10; i++) {
+                        var temp_enemy = enemy_prototype.clone();
+                        var temp_dir = [0, -0.25, 0];
+                        temp_enemy.position.x = -15 + 5 * (i % 5);
+                        temp_enemy.position.y = Y_TOP_BORDER + 4 - 5 * Math.floor(i / 5);
+                        enemies.push(temp_enemy);
+                        enemies_move.push(temp_dir);
+                        scene.add(enemies[enemies.length - 1]);
+                    }
+                }
+            }
+
+            function update_enemies() {
+                var enemy_count = enemies.length;
+                for (var i = 0; i < enemy_count; i++) {
+                    enemies[i].position.x += enemies_move[i][0];
+                    enemies[i].position.y += enemies_move[i][1];
+                }
+
+                for (var i = enemy_count - 1; i >= 0; i--) {
+                    if (enemies[i].position.x > X_RIGHT_BORDER || enemies[i].position.x < X_LEFT_BORDER || enemies[i].position.y < Y_BOTTOM_BORDER) {
+                        enemies[i].visible = false;
+                        scene.remove(enemies[i]);
+                        enemies.splice(i, 1);                        
+                    }
+                }
             }
 
             function update_player_craft() {
@@ -248,7 +268,6 @@
 
                 // spacebar - fire
                 if (keyPressed[32] == true) {
-                    console.log('fire!!');
                     var bullet1 = player_bullet.clone(), bullet2 = player_bullet.clone();
                     bullet1.position.x = player_craft.position.x - 1.5;
                     bullet1.position.y = player_craft.position.y + 3;
