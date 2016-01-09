@@ -26,14 +26,19 @@
             const WINDOW_HEIGHT = 900;
             const X_LEFT_BORDER = -20;
             const X_RIGHT_BORDER = 20;
-            const Y_TOP_BORDER = 35;
-            const Y_BOTTOM_BORDER = -35;
+            const Y_TOP_BORDER = 38;
+            const Y_BOTTOM_BORDER = -38;
             var keyPressed = {};
 
             /* three.js environment */
             var scene = new THREE.Scene();
             var camera = new THREE.PerspectiveCamera( 75, WINDOW_WIDTH / WINDOW_HEIGHT, 0.1, 1000 );
             var renderer = new THREE.WebGLRenderer();
+            var bgImage = THREE.ImageUtils.loadTexture( 'bg/1837314.jpg' );
+            var bg = new THREE.Mesh(new THREE.PlaneGeometry(192, 108, 16, 16), new THREE.MeshBasicMaterial({map: bgImage}));
+            bg.rotation.z = Math.PI / 2;
+            bg.position.z = -10;
+            scene.add(bg);
             renderer.setSize( WINDOW_WIDTH, WINDOW_HEIGHT );
             document.body.appendChild( renderer.domElement );
 
@@ -147,6 +152,7 @@
             function render() {
                 collision_detection();
                 update_game();
+                bg.position.y -= 0.015
                 requestAnimationFrame( render );
                 renderer.render( scene, camera );
             }
