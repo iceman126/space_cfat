@@ -6,6 +6,12 @@
         <style>
             body { margin: 0; }
             canvas { width: 100%; height: 100% }
+            #instruction {
+                position: absolute;
+                top: 0px;
+                left: 0px;
+                color: white;
+            }
         </style>
     </head>
     <body>
@@ -20,7 +26,7 @@
             const WINDOW_HEIGHT = 900;
             const X_LEFT_BORDER = -20;
             const X_RIGHT_BORDER = 20;
-            const Y_TOP_BORDER = 25;
+            const Y_TOP_BORDER = 30;
             var keyPressed = {};
 
             /* three.js environment */
@@ -255,5 +261,10 @@
                 }
             }
         </script>
+        <div id="instruction">
+        CONTROL:<br />
+        <b>Move:</b> Arrow Keys<br />
+        <b>Shoot:</b> SpaceBar<br />
+        </div>
     </body>
 </html>
