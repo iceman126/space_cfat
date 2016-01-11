@@ -18,6 +18,13 @@
 				left: 450px;
 				color: white;
 			}
+			#wave_message {
+				position: absolute;
+				top: 400px;
+				left: 40px;
+				font-size: 100px;
+				color: red;
+			}
         </style>
     </head>
     <body>
@@ -53,9 +60,10 @@
             var light = new THREE.AmbientLight( 0xFFFFFF ); // soft white light
             scene.add( light );
 
-
             /* system variable */
             var keyPressed = {};
+			var bgm = new Audio('sound/BGM.m4a');
+			var wave_index = 1;
             
             /* game objects */
             function Shot(bullet1, bullet2) {
@@ -69,7 +77,6 @@
             var player_bullet;                          
             var player_shot_CD = 0;                     // the interations between shots
             var shooting_sound = new Audio('sound/LAZER.WAV');
-			var bgm = new Audio('sound/BGM.m4a');
 
             /* enemies' */
             var enemy_prototype;
@@ -122,7 +129,7 @@
                 manager.onLoad = function() {
                     player_craft = temp1.craft;
                     enemy_prototype = temp2.craft;
-                    set_position(player_craft, 0, -15, 0.5);    // set position of player craft
+                    set_position(player_craft, 0, -35, 0.5);    // set position of player craft
                     scene.add(player_craft);
                     main();                                     // when all the model is finished, call main()
                 };
@@ -133,7 +140,7 @@
                 document.addEventListener('keydown', keydown_handler);
                 document.addEventListener('keyup', keyup_handler);
                 //console.log(scene.children);
-                set_wave(1);                                    // set first wave of enemies
+                set_wave(wave_index);                                    // set first wave of enemies
                 render();
 				
 				bgm.play();
@@ -146,7 +153,7 @@
 
             /* bullet functions */
             function init_player_bullet() {
-                var geometry = new THREE.CylinderGeometry(0.2, 0.2, 3, 32);
+                var geometry = new THREE.CylinderGeometry(0.2, 0.2, 3, 8);
                 var material = new THREE.MeshBasicMaterial( {color: 0xff0000} );
                 player_bullet = new THREE.Mesh( geometry, material );
             }
@@ -209,7 +216,9 @@
                         var collision_count = collisions.length;
                         for (var k = 0; k < collision_count; k++) {
                             if (collisions[k].distance < 1) {
-                                console.log("game over!!");
+								update_wave_message("Game Over");
+								wave_index = 0;
+								scene.remove(player_craft);
                                 return;
                             }
                         }
@@ -246,6 +255,10 @@
                                 // remove enemy model
                                 scene.remove(enemies[i]);
                                 enemies.splice(i, 1);
+								
+								// remove bullet
+								scene.remove(collisions[k].object);
+								
 								update_scoreboard();
                                 break;
                             }
@@ -281,8 +294,9 @@
                 update_player_craft();
                 update_our_shots();
                 update_enemies();
-                if (enemies.length == 0) {
-                    set_wave(1);
+                if (enemies.length == 0 && wave_index > 0) {
+					wave_index++;
+					set_wave(wave_index);
                 }
             }
 
@@ -296,39 +310,27 @@
 
             /* set enemy wave, stage is designed here. */
             function set_wave(index) {
-                if (index == 1) {
-                    var enemy_count = 10;
-                    for (var i = 0; i < 10; i++) {
-                        // create enemy entity
-                        var temp_enemy = enemy_prototype.clone();
-                        set_position(temp_enemy, Math.random() * 40 - 20, Y_TOP_BORDER + Math.random() * 150, 0);
-                        enemies.push(temp_enemy);
+                var enemy_count = 5 * index;
+                for (var i = 0; i < enemy_count; i++) {
+                    // create enemy entity
+                    var temp_enemy = enemy_prototype.clone();
+                    set_position(temp_enemy, Math.random() * 40 - 20, Y_TOP_BORDER + Math.random() * 150, 0);
+                    enemies.push(temp_enemy);
 
-                        // set moving direction
-                        var temp_dir = [0, -0.25, 0];
-                        enemies_move.push(temp_dir);
+                    // set moving direction
+                    var temp_dir = [0, -0.25, 0];
+                    enemies_move.push(temp_dir);
 
-                        // set hitting sphere
-                        var temp_sphere = hitting_sphere_prototype.clone();
-                        set_position(temp_sphere, -15 + 5 * (i % 5), Y_TOP_BORDER + 4 - 5 * Math.floor(i / 5), -0.5);
-                        hitting_spheres.push(temp_sphere);
+                    // set hitting sphere
+                    var temp_sphere = hitting_sphere_prototype.clone();
+                    set_position(temp_sphere, -15 + 5 * (i % 5), Y_TOP_BORDER + 4 - 5 * Math.floor(i / 5), -0.5);
+                    hitting_spheres.push(temp_sphere);
 
-                        // add both the object to the scene
-                        scene.add(enemies[enemies.length - 1]);
-                        scene.add(hitting_spheres[enemies.length - 1]);
-                    }
+                    // add both the object to the scene
+                    scene.add(enemies[enemies.length - 1]);
+                    scene.add(hitting_spheres[enemies.length - 1]);
                 }
-                if (index == 2) {
-                    var enemy_count = 10;
-                    for (var i = 0; i < 10; i++) {
-                        var temp_enemy = enemy_prototype.clone();
-                        var temp_dir = [0, -0.25, 0];
-                        set_position(temp_enemy, -15 + 5 * (i % 5), Y_TOP_BORDER + 4 - 5 * Math.floor(i / 5), 0);
-                        enemies.push(temp_enemy);
-                        enemies_move.push(temp_dir);
-                        scene.add(enemies[enemies.length - 1]);
-                    }
-                }
+				update_wave_message("WAVE " + index);
             }
 
             function update_enemies() {
@@ -341,7 +343,6 @@
                     hitting_spheres[i].position.x = enemies[i].position.x;
                     hitting_spheres[i].position.y = enemies[i].position.y;
                 }
-
 
                 // if the enemy is out of screen, kill it.
                 for (var i = enemy_count - 1; i >= 0; i--) {
@@ -371,7 +372,7 @@
                 }
 
                 // spacebar - fire
-                if (keyPressed[32] == true) {
+                if (keyPressed[32] == true && wave_index > 0) {
                     // check if cool down is over
                     if (player_shot_CD == 0) {
                         shooting_sound.pause();
@@ -396,14 +397,26 @@
 				defeated_enemies_count++;
 				document.getElementById("scoreboard").innerHTML = "SCORES: <b>" + defeated_enemies_count * 10 + "</b>";
 			}
+			
+			function update_wave_message(message) {
+				if (message == "Game Over")
+					document.getElementById("wave_message").innerHTML = message;
+				else {
+					document.getElementById("wave_message").innerHTML = "<span style='margin-left: 80px;'>" + message + "</span>";
+					setTimeout(function() {
+						document.getElementById("wave_message").innerHTML = "";
+					}, 3000);
+				}
+			}
         </script>
         <div id="instruction">
         CONTROL:<br />
         <b>Move:</b> Arrow Keys<br />
-        <b>Shoot:</b> SpaceBar<br />
+        <b>Shoot:</b> Space Bar<br />
         </div>
 		<div id="scoreboard">
-		SCORES: <b>0</b><br />
+		SCORES: <b>0</b>
 		</div>
+		<div id="wave_message"></div>
     </body>
 </html>
