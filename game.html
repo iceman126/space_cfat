@@ -68,6 +68,7 @@
             var player_bullets = [];                    // the place save all the bullets of players
             var player_bullet;                          
             var player_shot_CD = 0;                     // the interations between shots
+            var shooting_sound = new Audio('sound/LAZER.WAV');
 
             /* enemies' */
             var enemy_prototype;
@@ -369,6 +370,8 @@
                 if (keyPressed[32] == true) {
                     // check if cool down is over
                     if (player_shot_CD == 0) {
+                        shooting_sound.pause();
+                        shooting_sound.currentTime = 0;
                         /* put the bullets into the scene */
                         var bullet1 = player_bullet.clone(), bullet2 = player_bullet.clone();
                         bullet1.position.x = player_craft.position.x - 1.5;
@@ -379,6 +382,7 @@
                         player_bullets.push(bullet2);
                         scene.add(bullet1);
                         scene.add(bullet2);
+                        shooting_sound.play();
                         player_shot_CD = SHOT_CD;
                     }
                 }
