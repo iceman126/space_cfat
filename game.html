@@ -12,6 +12,12 @@
                 left: 0px;
                 color: white;
             }
+			#scoreboard {
+				position: absolute;
+				top: 0px;
+				left: 450px;
+				color: white;
+			}
         </style>
     </head>
     <body>
@@ -70,6 +76,7 @@
             var enemy_shots = [];                       // save all the enemy shots
             var enemies_move = [];                      // save all the direction of enemy should heading
             var hitting_spheres = [];                   // use to do collision detection
+			var defeated_enemies_count = 0;
 
             /* system's */
             var temp1 = {}, temp2 = {};
@@ -234,6 +241,7 @@
                                 // remove enemy model
                                 scene.remove(enemies[i]);
                                 enemies.splice(i, 1);
+								update_scoreboard();
                                 break;
                             }
                         }
@@ -288,7 +296,7 @@
                     for (var i = 0; i < 10; i++) {
                         // create enemy entity
                         var temp_enemy = enemy_prototype.clone();
-                        set_position(temp_enemy, -15 + 5 * (i % 5), Y_TOP_BORDER + 4 - 5 * Math.floor(i / 5), 0);
+                        set_position(temp_enemy, Math.random() * 40 - 20, Y_TOP_BORDER + Math.random() * 150, 0);
                         enemies.push(temp_enemy);
 
                         // set moving direction
@@ -343,11 +351,11 @@
 
             function update_player_craft() {
                 // up
-                if (keyPressed[38] == true) {
+                if (keyPressed[38] == true && player_craft.position.y <= Y_TOP_BORDER) {
                     player_craft.position.y += MOVE_SPEED;
                 }
                 // down
-                if (keyPressed[40] == true) {
+                if (keyPressed[40] == true && player_craft.position.y >= Y_BOTTOM_BORDER) {
                     player_craft.position.y -= MOVE_SPEED;
                 }
                 if (keyPressed[37] == true && player_craft.position.x >= X_LEFT_BORDER) {
