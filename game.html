@@ -38,7 +38,7 @@
             var bgImage = THREE.ImageUtils.loadTexture( 'bg/1837314.jpg' );
             var bg = new THREE.Mesh(new THREE.PlaneGeometry(192, 108, 16, 16), new THREE.MeshBasicMaterial({map: bgImage}));
             bg.rotation.z = Math.PI / 2;
-            bg.position.y = 55;
+            bg.position.y = 45;
             bg.position.z = -10;
             scene.add(bg);
             renderer.setSize( WINDOW_WIDTH, WINDOW_HEIGHT );
@@ -207,9 +207,11 @@
 
             function hit_enemy_detection() {
                 var rays = [
+                    new THREE.Vector3(-1, 0, 0),
+                    new THREE.Vector3(1, 0, 0),
                     new THREE.Vector3(1, -1, 0),
                     new THREE.Vector3(0, -1, 0),
-                    new THREE.Vector3(-1, -1, 0),
+                    new THREE.Vector3(-1, -1, 0)
                 ];
 
                 var caster = new THREE.Raycaster();
@@ -223,7 +225,7 @@
                         var collision_count = collisions.length;
                         var is_hitted = false;
                         for (var k = 0; k < collision_count; k++) {
-                            if (collisions[k].distance < 1) {
+                            if (collisions[k].distance < 1.5) {
                                 is_hitted = true;
                                 // remove hitting sphere
                                 scene.remove(hitting_spheres[i]);
