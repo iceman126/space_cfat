@@ -323,7 +323,7 @@
 
                     // set hitting sphere
                     var temp_sphere = hitting_sphere_prototype.clone();
-                    set_position(temp_sphere, -15 + 5 * (i % 5), Y_TOP_BORDER + 4 - 5 * Math.floor(i / 5), -0.5);
+                    set_position(temp_sphere, Math.random() * 40 - 20, Y_TOP_BORDER + Math.random() * 150, 0);
                     hitting_spheres.push(temp_sphere);
 
                     // add both the object to the scene
