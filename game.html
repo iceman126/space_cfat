@@ -310,6 +310,8 @@
 
             /* set enemy wave, stage is designed here. */
             function set_wave(index) {
+                enemies = [];
+                enemies_move = [];
                 var enemy_count = 5 * index;
                 for (var i = 0; i < enemy_count; i++) {
                     // create enemy entity
@@ -318,7 +320,9 @@
                     enemies.push(temp_enemy);
 
                     // set moving direction
-                    var temp_dir = [0, -0.25, 0];
+                    var random_x = Math.random() * 0.1 - 0.05;
+                    var random_y = (-Math.random() * 0.25) * wave_index;
+                    var temp_dir = [random_x, random_y, 0];
                     enemies_move.push(temp_dir);
 
                     // set hitting sphere
