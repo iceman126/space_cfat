@@ -375,11 +375,19 @@
                     }
                 }
             }
+			
+			function update_scoreboard() {
+				defeated_enemies_count++;
+				document.getElementById("scoreboard").innerHTML = "SCORES: <b>" + defeated_enemies_count * 10 + "</b>";
+			}
         </script>
         <div id="instruction">
         CONTROL:<br />
         <b>Move:</b> Arrow Keys<br />
         <b>Shoot:</b> SpaceBar<br />
         </div>
+		<div id="scoreboard">
+		SCORES: <b>0</b><br />
+		</div>
     </body>
 </html>
