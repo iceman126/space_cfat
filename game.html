@@ -221,8 +221,10 @@
                         caster.set(enemies[i].position, rays[j]);
                         var collisions = caster.intersectObjects(player_bullets);
                         var collision_count = collisions.length;
+                        var is_hitted = false;
                         for (var k = 0; k < collision_count; k++) {
                             if (collisions[k].distance < 1) {
+                                is_hitted = true;
                                 // remove hitting sphere
                                 scene.remove(hitting_spheres[i]);
                                 hitting_spheres.splice(i, 1);
@@ -233,6 +235,9 @@
                                 break;
                             }
                         }
+                        // if is hitted, just check next enemy
+                        if (is_hitted == true)
+                            break;
                     }
                 }
             }
