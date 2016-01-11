@@ -21,13 +21,14 @@
         <script src="threejs/OBJMTLLoader.js"></script>
         <script>
             /* some constant */
-            const MOVE_SPEED = 0.8;
+            const MOVE_SPEED = 0.8;             // move speed of the crafts
             const WINDOW_WIDTH = 600;
             const WINDOW_HEIGHT = 900;
-            const X_LEFT_BORDER = -20;
+            const X_LEFT_BORDER = -20;          // screen axis boundary
             const X_RIGHT_BORDER = 20;
             const Y_TOP_BORDER = 38;
             const Y_BOTTOM_BORDER = -38;
+            const SHOT_CD = 20;                 // shooting interval
             var keyPressed = {};
 
             /* three.js environment */
@@ -37,6 +38,7 @@
             var bgImage = THREE.ImageUtils.loadTexture( 'bg/1837314.jpg' );
             var bg = new THREE.Mesh(new THREE.PlaneGeometry(192, 108, 16, 16), new THREE.MeshBasicMaterial({map: bgImage}));
             bg.rotation.z = Math.PI / 2;
+            bg.position.y = 55;
             bg.position.z = -10;
             scene.add(bg);
             renderer.setSize( WINDOW_WIDTH, WINDOW_HEIGHT );
@@ -56,15 +58,18 @@
             }
 
             /* player's */
-            var player_craft;
-            var player_shots = [];
-            var player_bullet;
+            var player_craft;                           // object of player's craft
+            var player_bullets = [];                    // the place save all the bullets of players
+            var player_bullet;                          
+            var player_shot_CD = 0;                     // the interations between shots
 
             /* enemies' */
             var enemy_prototype;
-            var enemies = [];
-            var enemy_shots = [];
-            var enemies_move = [];
+            var hitting_sphere_prototype;               // hitting sphere, use for collision detectoin
+            var enemies = [];                           // save of model objects of enemy craft
+            var enemy_shots = [];                       // save all the enemy shots
+            var enemies_move = [];                      // save all the direction of enemy should heading
+            var hitting_spheres = [];                   // use to do collision detection
 
             /* system's */
             var temp1 = {}, temp2 = {};
@@ -79,9 +84,12 @@
 
                 /* initial bullets */
                 init_player_bullet();
+
+                /* initial hitting target */
+                hitting_sphere_prototype = create_sphere(2, true);
             }
 
-            function load_model(target, manager, model_path, mat_path, scale, rotation) {
+            function load_model(target, manager, model_path, mat_path, scale, rotation, z_pos) {
                 var loader = new THREE.OBJMTLLoader(manager);
                 loader.load(model_path, mat_path,
                     function (object) {
@@ -91,9 +99,10 @@
                 });
             }
 
-            function set_position(target, x, y) {
+            function set_position(target, x, y, z) {
                 target.position.x = x;
                 target.position.y = y;
+                target.position.z = z;
             }
 
             function create_loader_manager() {
@@ -104,9 +113,9 @@
                 manager.onLoad = function() {
                     player_craft = temp1.craft;
                     enemy_prototype = temp2.craft;
-                    set_position(player_craft, 0, -15);
+                    set_position(player_craft, 0, -15, 0.5);    // set position of player craft
                     scene.add(player_craft);
-                    main();
+                    main();                                     // when all the model is finished, call main()
                 };
                 return manager
             }
@@ -114,7 +123,8 @@
             function main() {
                 document.addEventListener('keydown', keydown_handler);
                 document.addEventListener('keyup', keyup_handler);
-                set_wave(1);
+                console.log(scene.children);
+                set_wave(1);                                    // set first wave of enemies
                 render();
             }
 
@@ -140,7 +150,15 @@
 
             function keydown_handler(e) {
                 var keycode = e.which;
-                keyPressed[keycode] = true;
+                if (keycode == 32) {
+                    if (keyPressed[keycode] == true)
+                        keyPressed[keycode] = false;
+                    else
+                        keyPressed[keycode] = true;
+                }
+                else {
+                    keyPressed[keycode] = true;
+                }
                 e.preventDefault();
             }
           
@@ -158,88 +176,126 @@
             }
 
             function collision_detection() {
+                hit_enemy_detection();
+                crash_detection();              // hit with enemy craft
+            }
+
+            function crash_detection() {
                 var rays = [
-                    /*
-                    new THREE.Vector3(1, -1, 0),
-                    new THREE.Vector3(1, 0, 0),
                     new THREE.Vector3(1, 1, 0),
                     new THREE.Vector3(0, 1, 0),
-                    new THREE.Vector3(0, -1, 0),
-                    new THREE.Vector3(-1, -1, 0),
-                    new THREE.Vector3(-1, 0, 0),
                     new THREE.Vector3(-1, 1, 0),
-                    */
+                ];
+                var caster = new THREE.Raycaster();
+                var enemy_count = enemies.length;
+                var ray_count = rays.length;
+                //console.log(scene.children);
+                for (var i = enemy_count - 1; i >= 0; i--) {
+                    for (var j = 0; j < ray_count; j++) {
+                        caster.set(player_craft.position, rays[j]);
+                        var collisions = caster.intersectObjects(hitting_spheres);
+                        var collision_count = collisions.length;
+                        for (var k = 0; k < collision_count; k++) {
+                            if (collisions[k].distance < 1) {
+                                console.log("game over!!");
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
+
+            function hit_enemy_detection() {
+                var rays = [
                     new THREE.Vector3(1, -1, 0),
                     new THREE.Vector3(0, -1, 0),
                     new THREE.Vector3(-1, -1, 0),
                 ];
 
                 var caster = new THREE.Raycaster();
-
-                // console.log(enemy_prototype.position);
-
                 var enemy_count = enemies.length;
-                var player_shots_count = player_shots.length;
+                var player_bullets_count = player_bullets.length;
+                var ray_count = rays.length;
                 for (var i = enemy_count - 1; i >= 0; i--) {
-                    for (var j = 0; j < rays.length; j++) {
+                    for (var j = 0; j < ray_count; j++) {
                         caster.set(enemies[i].position, rays[j]);
-                        //for (var k = 0; k < player_shots_count; k++) {
-                            var collisions = caster.intersectObjects(scene.children);
-                            //var collisions = caster.intersectObjects(player_shots[k].bullet1);
-                            //collisions += caster.intersectObjects(player_shots[k].bullet2);
-                            if (collisions.length > 0) {
-                                console.log(collisions);
-                                enemies[i].visible = false;
+                        var collisions = caster.intersectObjects(player_bullets);
+                        var collision_count = collisions.length;
+                        for (var k = 0; k < collision_count; k++) {
+                            if (collisions[k].distance < 1) {
+                                // remove hitting sphere
+                                scene.remove(hitting_spheres[i]);
+                                hitting_spheres.splice(i, 1);
+
+                                // remove enemy model
                                 scene.remove(enemies[i]);
                                 enemies.splice(i, 1);
                                 break;
                             }
-                        //}
+                        }
                     }
                 }
             }
 
             function update_our_shots() {
                 /* update bullet */
-                var arr_len = player_shots.length;
+                var arr_len = player_bullets.length;
 
                 // remove out of bound
                 for (var i = arr_len - 1; i >= 0; i--) {
-                    if (player_shots[i].bullet1.position.y > Y_TOP_BORDER) {
-                        scene.remove(player_shots[i].bullet1);
-                        scene.remove(player_shots[i].bullet2);
-                        player_shots.splice(i, 1);
+                    if (player_bullets[i].position.y > Y_TOP_BORDER) {
+                        scene.remove(player_bullets[i]);
+                        player_bullets.splice(i, 1);
                     }
                 }
 
-                arr_len = player_shots.length;
+                arr_len = player_bullets.length;
                 for (var i = 0; i < arr_len; i++) {
-                    player_shots[i].bullet1.position.y += MOVE_SPEED;
-                    player_shots[i].bullet2.position.y += MOVE_SPEED;
+                    player_bullets[i].position.y += MOVE_SPEED;
                 }
             }
 
             function update_game() {
+                if (player_shot_CD > 0)
+                    player_shot_CD--;
                 update_player_craft();
                 update_our_shots();
                 update_enemies();
                 if (enemies.length == 0) {
-                    set_wave(2);
+                    set_wave(1);
                 }
             }
 
-            // set wave enemy
+            function create_sphere(radius, visible) {
+                var geometry = new THREE.SphereGeometry( radius, 32, 32 );
+                var material = new THREE.MeshNormalMaterial( {transparent: true, opacity: 0.0} );
+                var sphere = new THREE.Mesh( geometry, material );
+                sphere.visible = visible;
+                return sphere;
+            }
+
+            /* set enemy wave, stage is designed here. */
             function set_wave(index) {
                 if (index == 1) {
                     var enemy_count = 10;
                     for (var i = 0; i < 10; i++) {
+                        // create enemy entity
                         var temp_enemy = enemy_prototype.clone();
-                        var temp_dir = [0, -0.25, 0];
-                        temp_enemy.position.x = -15 + 5 * (i % 5);
-                        temp_enemy.position.y = Y_TOP_BORDER + 4 - 5 * Math.floor(i / 5);
+                        set_position(temp_enemy, -15 + 5 * (i % 5), Y_TOP_BORDER + 4 - 5 * Math.floor(i / 5), 0);
                         enemies.push(temp_enemy);
+
+                        // set moving direction
+                        var temp_dir = [0, -0.25, 0];
                         enemies_move.push(temp_dir);
+
+                        // set hitting sphere
+                        var temp_sphere = hitting_sphere_prototype.clone();
+                        set_position(temp_sphere, -15 + 5 * (i % 5), Y_TOP_BORDER + 4 - 5 * Math.floor(i / 5), -0.5);
+                        hitting_spheres.push(temp_sphere);
+
+                        // add both the object to the scene
                         scene.add(enemies[enemies.length - 1]);
+                        scene.add(hitting_spheres[enemies.length - 1]);
                     }
                 }
                 if (index == 2) {
@@ -247,8 +303,7 @@
                     for (var i = 0; i < 10; i++) {
                         var temp_enemy = enemy_prototype.clone();
                         var temp_dir = [0, -0.25, 0];
-                        temp_enemy.position.x = -15 + 5 * (i % 5);
-                        temp_enemy.position.y = Y_TOP_BORDER + 4 - 5 * Math.floor(i / 5);
+                        set_position(temp_enemy, -15 + 5 * (i % 5), Y_TOP_BORDER + 4 - 5 * Math.floor(i / 5), 0);
                         enemies.push(temp_enemy);
                         enemies_move.push(temp_dir);
                         scene.add(enemies[enemies.length - 1]);
@@ -258,16 +313,23 @@
 
             function update_enemies() {
                 var enemy_count = enemies.length;
+
+                // update enemy position
                 for (var i = 0; i < enemy_count; i++) {
                     enemies[i].position.x += enemies_move[i][0];
                     enemies[i].position.y += enemies_move[i][1];
+                    hitting_spheres[i].position.x = enemies[i].position.x;
+                    hitting_spheres[i].position.y = enemies[i].position.y;
                 }
 
+
+                // if the enemy is out of screen, kill it.
                 for (var i = enemy_count - 1; i >= 0; i--) {
                     if (enemies[i].position.x > X_RIGHT_BORDER || enemies[i].position.x < X_LEFT_BORDER || enemies[i].position.y < Y_BOTTOM_BORDER) {
-                        enemies[i].visible = false;
+                        scene.remove(hitting_spheres[i]);
                         scene.remove(enemies[i]);
-                        enemies.splice(i, 1);                        
+                        enemies.splice(i, 1);
+                        hitting_spheres.splice(i, 1);            
                     }
                 }
             }
@@ -290,15 +352,20 @@
 
                 // spacebar - fire
                 if (keyPressed[32] == true) {
-                    var bullet1 = player_bullet.clone(), bullet2 = player_bullet.clone();
-                    bullet1.position.x = player_craft.position.x - 1.5;
-                    bullet1.position.y = player_craft.position.y + 3;
-                    bullet2.position.x = player_craft.position.x + 1.5;
-                    bullet2.position.y = player_craft.position.y + 3;
-                    var shot = new Shot(bullet1, bullet2);
-                    player_shots.push(shot);
-                    console.log(player_shots);
-                    add_shot_to_scene(player_shots[player_shots.length - 1]);
+                    // check if cool down is over
+                    if (player_shot_CD == 0) {
+                        /* put the bullets into the scene */
+                        var bullet1 = player_bullet.clone(), bullet2 = player_bullet.clone();
+                        bullet1.position.x = player_craft.position.x - 1.5;
+                        bullet1.position.y = player_craft.position.y + 3;
+                        bullet2.position.x = player_craft.position.x + 1.5;
+                        bullet2.position.y = player_craft.position.y + 3;
+                        player_bullets.push(bullet1);
+                        player_bullets.push(bullet2);
+                        scene.add(bullet1);
+                        scene.add(bullet2);
+                        player_shot_CD = SHOT_CD;
+                    }
                 }
             }
         </script>
