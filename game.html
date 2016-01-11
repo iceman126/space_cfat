@@ -69,6 +69,7 @@
             var player_bullet;                          
             var player_shot_CD = 0;                     // the interations between shots
             var shooting_sound = new Audio('sound/LAZER.WAV');
+			var bgm = new Audio('sound/BGM.m4a');
 
             /* enemies' */
             var enemy_prototype;
@@ -131,9 +132,10 @@
             function main() {
                 document.addEventListener('keydown', keydown_handler);
                 document.addEventListener('keyup', keyup_handler);
-                console.log(scene.children);
+                //console.log(scene.children);
                 set_wave(1);                                    // set first wave of enemies
                 render();
+				bgm.play();
             }
 
             /* render */
